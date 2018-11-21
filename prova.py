@@ -9,8 +9,13 @@ with open("estrattoConto.csv") as f:
      try:
        mese = data1.split(".")[1]
        anno = data1.split(".")[2]
+       mesanno = mese+"-"+anno
      except Exception as e:
        print ("warning", e)
+       continue
+     if mesanno not in dizionario.keys():
+       dizionario[mesanno] = {}
+
 
      data2 = line.split(";")[1]
      richiedente = line.split(";")[2].upper()
@@ -22,10 +27,10 @@ with open("estrattoConto.csv") as f:
        importo = float(importo.replace(",","."))
      except:
        continue
-     if not richiedente in dizionario.keys():
-       dizionario[richiedente] = importo
+     if not richiedente in dizionario[mesanno].keys():
+       dizionario[mesanno][richiedente] = importo
      else:
-       dizionario[richiedente] += importo
+       dizionario[mesanno][richiedente] += importo
 
 print json.dumps(dizionario,sort_keys=True, indent=4)
 
