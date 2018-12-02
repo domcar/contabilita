@@ -1,34 +1,35 @@
 import json
 from dateutil.parser import parse
 
+# categorie e sottocategorie
 categorie = {
-  "abbigliamento" : ["h+m","woolworth","crocs","geox","baby walz","c+a","Ernsting","stoffe","schuhcenter"],
+  "abbigliamento" : ["h+m","woolworth","crocs","geox","baby walz","c+a","Ernsting","stoffe","schuhcenter","totale"],
   "acasa"         : ["segmueller","galeria","bauhaus","toom","hornbach",
                      "fliesen","kibek","ikea","xxxl","obi","karstadt","staples",
-                     "weku","bm offenbach","tende","gries","idee.creativ","moemax"],
+                     "weku","bm offenbach","tende","gries","idee.creativ","moemax","totale","BDSK HANDELS"],
   "appartamento"  : ["energieversorgung","evo","thomas reinecke","energievers","XENOS",
                      "friedrich sommer","tilgung","zinsen","miete","taeglich",
-                     "giornaliero","baufinanzierung","weg","lanio","fbw"],
-  "assicurazioni" : ["arag","huk","axa"],
-  "bici"          : ["b.o.c","montimare","fahrrad"],
-  "entrate"       : ["entrate"],
-  "farmaci"       : ["apotheke","farmacia"],
-  "internet"      : ["unitymedia"],
+                     "giornaliero","baufinanzierung","weg","lanio","fbw","totale"],
+  "assicurazioni" : ["arag","huk","axa","totale","kfz versicherung","techniker krank"],
+  "bici"          : ["b.o.c","montimare","fahrrad","totale"],
+  "entrate"       : ["entrate","totale"],
+  "farmaci"       : ["apotheke","farmacia","totale"],
+  "internet"      : ["unitymedia","totale"],
   "macchina"      : ["driver center","akf bank","esso","aral","park","parking",
-                     "calpam","shell","fraport"],
-  "nina"          : ["tagtraume","familien kasse","toys","nanu","primigi","piccoli"],
-  "nocat"         : [],
-  "prelievo"      : ["ING-DiBa-AG"],
+                     "calpam","shell","fraport","totale"],
+  "nina"          : ["tagtraume","TAGTRAEUME","familien kasse","toys","nanu","primigi","piccoli","totale"],
+  "nocat"         : ["totale"],
+  "prelievo"      : ["ING-DiBa-AG","totale"],
   "spesa"         : ["rewe", "dm","tegut","scheck in","rossmann","meta","giovo",
-                     "penny","supermercato","kafein","basic","europa commerciale","hema"],
-  "tasse"         : ["hcc","vanessa","gerichtskasse"],
-  "trasporto"     : ["vgf","verkehrs","db vertrieb"],
+                     "penny","supermercato","kafein","basic","europa commerciale","hema","totale"],
+  "tasse"         : ["hcc","vanessa","gerichtskasse","totale"],
+  "trasporto"     : ["vgf","verkehrs","db vertrieb","totale"],
   "uscite"        : ["HESSEWIRTSCHAFT","LEONHARDS","GASTRONOMIE","TIGER","restaurant",
                      "pizzeria","jamys","WILLYS BAR","vapiano","biomarkt","coffee",
-                     "azurro","belge","dolce vita","speckwirt","aplofoods","TURM-BRAEU"],
-  "fuori-casa"    : ["opel zoo","senckenberg"],
-  "vacanze"       : ["hotel"],
-  "varie"         : ["ofc fanshop","gulliver","relay"]
+                     "azurro","belge","dolce vita","speckwirt","aplofoods","TURM-BRAEU","totale","gastronom"],
+  "fuori-casa"    : ["opel zoo","senckenberg","totale"],
+  "vacanze"       : ["hotel","totale"],
+  "varie"         : ["ofc fanshop","gulliver","relay","totale"]
 }
 
 def assign_to_cat (richiedente):
@@ -79,6 +80,7 @@ with open("estrattoConto.csv") as f:
         dizionario[mesanno] = {}
         for cat in categorie.keys():
           dizionario[mesanno][cat] = {}
+          dizionario[mesanno][cat]["totale"] = 0
 
       data2 = line.split(";")[1]
       try:
@@ -94,8 +96,6 @@ with open("estrattoConto.csv") as f:
       richiedente = line.split(";")[2].upper()
       richiedente = check_richiedente(line,richiedente,importo)
       categoria = assign_to_cat(richiedente)
-      #if categoria == "nocat":
-      #  print categoria, line
       modalita = line.split(";")[3]
       try:
         causale = line.split(";")[4]
@@ -107,12 +107,19 @@ with open("estrattoConto.csv") as f:
         dizionario[mesanno][categoria][richiedente] = importo
       else:
         dizionario[mesanno][categoria][richiedente] += importo
+      dizionario[mesanno][categoria]["totale"] += importo
     else:
       continue
 
 #print json.dumps(dizionario,sort_keys=True, indent=4)
 
-for data in dizionario.keys():
+ris_tot = open("risultato_totale.csv","w")
+ris_sot = open("risultato_sottocategoria.csv","w")
+for data in sorted(dizionario.keys()):
   for cat in dizionario[data].keys():
     for subcat in dizionario[data][cat].keys():
-      print (data+";"+cat+";"+subcat+";"+str(dizionario[data][cat][subcat]))
+      if subcat == "totale": 
+        if not dizionario[data][cat][subcat] == 0:
+          ris_tot.write(data+";"+cat+";"+str(abs(dizionario[data][cat][subcat]))+"\n")
+      else:
+        ris_sot.write(data+";"+cat+";"+subcat+";"+str(dizionario[data][cat][subcat])+"\n")
